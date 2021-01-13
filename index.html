@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta name="viewport" content="width=device-width" />
+
+	<style>
+		body {
+			font-family: Tahoma, Geneva, sans-serif;
+		}
+	</style>
+
+	<!-- colyseus.js client -->
+	<script type="text/javascript" src="https://unpkg.com/colyseus.js@^0.14.0/dist/colyseus.js"></script>
+
+</head>
+
+<body>
+
+	
+	<strong>username</strong><br>
+
+	<form id="Set_username">
+		<input type="text" id="username" value="" autofocus />
+		<input type="submit" value="send" />
+	</form>
+	<br>
+
+	<strong>Messages</strong><br>
+
+	<form id="Send_message">
+		<input type="text" id="message" value="" autofocus />
+		<input type="submit" value="send" />
+	</form>
+
+	
+
+	<div id="messages"></div>
+
+	<script>
+		var host = window.document.location.host.replace(/:.*/, '');
+
+		var client = new Colyseus.Client(location.protocol.replace("http", "ws") + "//" + host + (location.port ? ':' +
+			location.port : ''));
+		var room;
+		
+		client.joinOrCreate("chat").then(room_instance => {
+
+			room = room_instance;
+			
+			var players = {};
+
+			room.state.players.onAdd = function (player, sessionId) {
+				console.log(`${player} joined.`);
+			}
+
+			room.state.players.onRemove = function (player, sessionId) {
+				delete players[sessionId];
+			}
+			
+			room.onMessage("messages", function(message) {	
+				var p = document.createElement("p");
+				p.innerText = message;
+				document.querySelector("#messages").appendChild(p);
+			});
+
+			document.querySelector("#Send_message").onsubmit = function(e) {
+				e.preventDefault();
+
+				var input = document.querySelector("#message");
+				console.log("input:", input.value);
+				room.send("message", input.value);
+				input.value = "";
+			}
+
+			document.querySelector("#Set_username").onsubmit = function(e) {
+				e.preventDefault();
+
+				var input = document.querySelector("#username");
+				console.log("input:", input.value);
+				room.send("set_username", input.value);
+				input.value = "";
+			}
+		});
+	</script>
+</body>
+
+</html>
