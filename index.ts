@@ -1,9 +1,8 @@
 import express from 'express';
-import serveIndex from 'serve-index';
 import path from 'path';
 import cors from 'cors';
 import { createServer } from 'http';
-import { Server, LobbyRoom, RelayRoom } from 'colyseus';
+import { Server, LobbyRoom } from 'colyseus';
 import { monitor } from '@colyseus/monitor';
 import { TestRoom } from "./rooms/chat";
 
@@ -22,23 +21,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Attach WebSocket Server on HTTP Server.
 const gameServer = new Server({
   server: createServer(app),
   express: app,
   pingInterval: 0,
 });
 
-// Define "lobby" room
+
 gameServer.define("lobby", LobbyRoom);
 
-var Players = new Map();
-Players.set(2,"test1");
-Players.set(23,"test2");
-
-console.log(Players);
-
-// Define "chat" room
 gameServer.define("chat", TestRoom)
     .enableRealtimeListing();
 
@@ -49,7 +40,6 @@ app.get('/', function(req, res) {
 app.use('/', express.static(path.join(__dirname, "public")));
 
 app.use("/colyseus", basicAuthMiddleware, monitor());
-
 
 
 gameServer.onShutdown(function(){
